@@ -6,7 +6,7 @@
 <title>PowerHQ API — Playground (GraphiQL)</title>
 <link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
 <style>
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;
     background:linear-gradient(90deg,#117b69,#12a58c);color:#fff}
   .bar .title{font-weight:750;font-size:15px;white-space:nowrap}
@@ -15,7 +15,7 @@
   .bar select option{color:#10201d}
   .bar input{flex:1;min-width:200px;background:#fff;color:#10201d;font-family:ui-monospace,Menlo,Consolas,monospace}
   .bar .note{font-size:12px;color:rgba(255,255,255,.92)}
-  #graphiql{height:calc(100dvh - 53px)}
+  #graphiql{height:calc(100% - 53px)}
   #graphiql .loading{padding:40px;color:#5c6f6a;font-size:15px}
 </style>
 </head>
@@ -59,8 +59,13 @@
     '# { utilityAccounts(street: "947 STREETLIGHT STLG 250HPS", city: "BROWNSVILLE", state: "TX", zipCode: "78521") { utilityCode accountStatus } }'
   ].join('\n');
 
+  // Drop a rate-limited PUBLIC tester key here so visitors can play immediately.
+  // Leave "" to require each user to paste their own. Do NOT put a real cert/prod key here — this page is public.
+  const TESTER_KEY = "";
+
   const envEl = document.getElementById('env');
   const keyEl = document.getElementById('key');
+  if (TESTER_KEY) keyEl.value = TESTER_KEY;
   const root = ReactDOM.createRoot(document.getElementById('graphiql'));
 
   function render(){
