@@ -43,8 +43,10 @@
 <script>
   // Limited public tester config — fill these once the CORS sandbox + tester key exist.
   // Rate limiting (e.g. 10 calls / IP) is enforced server-side by PowerHQ, not here.
-  const ENDPOINT   = "https://eapi.sandbox.powerhq.co/graphql"; // set the real CORS-enabled sandbox URL
-  const TESTER_KEY = "";                                        // set a rate-limited PUBLIC tester key
+  // Points at YOUR local proxy (via cloudflared tunnel). The proxy holds the key + adds CORS.
+  // NOTE: this trycloudflare URL changes each time the tunnel restarts — update on restart.
+  const ENDPOINT   = "https://tuner-herein-library-seeing.trycloudflare.com";
+  const TESTER_KEY = ""; // no key here — the proxy injects it server-side
 
   const DEFAULT_QUERY = [
     '# PowerHQ Plan Data API — edit a query, then press the ▶ Run button.',
