@@ -3,32 +3,37 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>PowerHQ API — Playground (GraphiQL)</title>
+<title>PowerHQ API — Playground</title>
 <link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
 <style>
   html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;
-    background:linear-gradient(90deg,#117b69,#12a58c);color:#fff}
+  body{display:flex;flex-direction:column}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 14px;
+    background:linear-gradient(90deg,#117b69,#12a58c);color:#fff;flex:0 0 auto}
   .bar .title{font-weight:750;font-size:15px;white-space:nowrap}
-  .bar select,.bar input{border:1px solid rgba(255,255,255,.45);border-radius:7px;padding:6px 9px;font-size:13px}
-  .bar select{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
-  .bar select option{color:#10201d}
-  .bar input{flex:1;min-width:200px;background:#fff;color:#10201d;font-family:ui-monospace,Menlo,Consolas,monospace}
-  .bar .note{font-size:12px;color:rgba(255,255,255,.92)}
-  #graphiql{height:calc(100% - 53px)}
-  #graphiql .loading{padding:40px;color:#5c6f6a;font-size:15px}
+  .bar .pill{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);
+    border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .bar .note{font-size:12.5px;color:rgba(255,255,255,.92)}
+  .bar .note a{color:#fff;text-decoration:underline}
+  #graphiql{flex:1 1 auto;min-height:0}
+  #graphiql .loading{padding:40px;color:#5c6f6a}
+
+  /* hide the left sidebar (Docs Explorer + Show History icons) for more room */
+  .graphiql-sidebar{display:none !important}
+
+  /* stack the query editor ABOVE the response (Mintlify's column is narrow) */
+  .graphiql-session{flex-direction:column !important}
+  .graphiql-editors,.graphiql-response{width:100% !important}
+  .graphiql-editors{flex:1 1 55% !important;min-height:200px !important}
+  .graphiql-response{flex:1 1 45% !important;min-height:170px !important}
+  .graphiql-horizontal-drag-bar{display:none !important}
 </style>
 </head>
 <body>
 <div class="bar">
   <span class="title">⚡ PowerHQ Playground</span>
-  <select id="env" aria-label="Environment">
-    <option value="https://eapi.cert.powerhq.co/graphql">CERT</option>
-    <option value="https://eapi.prod.powerhq.co/graphql">PROD</option>
-    <option value="https://eapi.sandbox.powerhq.co/graphql">SANDBOX (CORS) — set real URL</option>
-  </select>
-  <input id="key" type="password" placeholder="x-api-key" autocomplete="off" spellcheck="false"/>
-  <span class="note">Autocomplete + Run activate against a CORS-enabled endpoint (your sandbox).</span>
+  <span class="pill">10 free calls</span>
+  <span class="note">Try live queries. Need more? <a href="mailto:support@powerhq.co">Get an API key</a>.</span>
 </div>
 <div id="graphiql"><div class="loading">Loading playground…</div></div>
 
@@ -36,9 +41,13 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/graphiql@3/graphiql.min.js"></script>
 <script>
+  // Limited public tester config — fill these once the CORS sandbox + tester key exist.
+  // Rate limiting (e.g. 10 calls / IP) is enforced server-side by PowerHQ, not here.
+  const ENDPOINT   = "https://eapi.sandbox.powerhq.co/graphql"; // set the real CORS-enabled sandbox URL
+  const TESTER_KEY = "";                                        // set a rate-limited PUBLIC tester key
+
   const DEFAULT_QUERY = [
     '# PowerHQ Plan Data API — edit a query, then press the ▶ Run button.',
-    '# Full autocomplete + Run light up once you select a CORS-enabled sandbox endpoint.',
     '',
     '{',
     '  residentialPlans(zipCode: "77002", monthlyUsage: 1000) {',
@@ -55,35 +64,20 @@
     '# { utilities(zipCode: "75231") { id name } }',
     '# { nextStartDate(zipCode: "75070", isMoveIn: false) { nextStartDate } }',
     '# { businessPlans(zipCode: "75070", annualUsageInkWh: 23000, isMoveIn: true) { id term price monthlyFee supplier { name } } }',
-    '# { energyInfoByState(stateCode: "TX", isBusiness: false) { averagePrice stateName electricityGenerationPercentage { renewableGeneration nonRenewableGeneration } } }',
-    '# { utilityAccounts(street: "947 STREETLIGHT STLG 250HPS", city: "BROWNSVILLE", state: "TX", zipCode: "78521") { utilityCode accountStatus } }'
+    '# { energyInfoByState(stateCode: "TX", isBusiness: false) { averagePrice stateName electricityGenerationPercentage { renewableGeneration nonRenewableGeneration } } }'
   ].join('\n');
 
-  // Drop a rate-limited PUBLIC tester key here so visitors can play immediately.
-  // Leave "" to require each user to paste their own. Do NOT put a real cert/prod key here — this page is public.
-  const TESTER_KEY = "";
+  const fetcher = GraphiQL.createFetcher({
+    url: ENDPOINT,
+    headers: TESTER_KEY ? { 'x-api-key': TESTER_KEY } : {}
+  });
 
-  const envEl = document.getElementById('env');
-  const keyEl = document.getElementById('key');
-  if (TESTER_KEY) keyEl.value = TESTER_KEY;
-  const root = ReactDOM.createRoot(document.getElementById('graphiql'));
-
-  function render(){
-    const fetcher = GraphiQL.createFetcher({
-      url: envEl.value,
-      headers: keyEl.value ? { 'x-api-key': keyEl.value } : {}
-    });
-    root.render(
-      React.createElement(GraphiQL, {
-        fetcher: fetcher,
-        defaultQuery: DEFAULT_QUERY,
-        defaultEditorToolsVisibility: true
-      })
-    );
-  }
-  envEl.addEventListener('change', render);
-  keyEl.addEventListener('change', render);
-  render();
+  ReactDOM.createRoot(document.getElementById('graphiql')).render(
+    React.createElement(GraphiQL, {
+      fetcher: fetcher,
+      defaultQuery: DEFAULT_QUERY
+    })
+  );
 </script>
 </body>
 </html>
