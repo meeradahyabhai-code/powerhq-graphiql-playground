@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>PowerHQ API — Playground (GraphiQL)</title>
+<link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;
+    background:linear-gradient(90deg,#117b69,#12a58c);color:#fff}
+  .bar .title{font-weight:750;font-size:15px;white-space:nowrap}
+  .bar select,.bar input{border:1px solid rgba(255,255,255,.45);border-radius:7px;padding:6px 9px;font-size:13px}
+  .bar select{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
+  .bar select option{color:#10201d}
+  .bar input{flex:1;min-width:200px;background:#fff;color:#10201d;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .bar .note{font-size:12px;color:rgba(255,255,255,.92)}
+  #graphiql{height:calc(100dvh - 53px)}
+  #graphiql .loading{padding:40px;color:#5c6f6a;font-size:15px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span class="title">⚡ PowerHQ Playground</span>
+  <select id="env" aria-label="Environment">
+    <option value="https://eapi.cert.powerhq.co/graphql">CERT</option>
+    <option value="https://eapi.prod.powerhq.co/graphql">PROD</option>
+    <option value="https://eapi.sandbox.powerhq.co/graphql">SANDBOX (CORS) — set real URL</option>
+  </select>
+  <input id="key" type="password" placeholder="x-api-key" autocomplete="off" spellcheck="false"/>
+  <span class="note">Autocomplete + Run activate against a CORS-enabled endpoint (your sandbox).</span>
+</div>
+<div id="graphiql"><div class="loading">Loading playground…</div></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/graphiql@3/graphiql.min.js"></script>
+<script>
+  const DEFAULT_QUERY = [
+    '# PowerHQ Plan Data API — edit a query, then press the ▶ Run button.',
+    '# Full autocomplete + Run light up once you select a CORS-enabled sandbox endpoint.',
+    '',
+    '{',
+    '  residentialPlans(zipCode: "77002", monthlyUsage: 1000) {',
+    '    title',
+    '    price',
+    '    term',
+    '    rateType',
+    '    supplier { name }',
+    '    rates { usageKwh allInRateUsdPerKwh avgMonthlyBillUsd }',
+    '  }',
+    '}',
+    '',
+    '# More examples — paste one in and Run:',
+    '# { utilities(zipCode: "75231") { id name } }',
+    '# { nextStartDate(zipCode: "75070", isMoveIn: false) { nextStartDate } }',
+    '# { businessPlans(zipCode: "75070", annualUsageInkWh: 23000, isMoveIn: true) { id term price monthlyFee supplier { name } } }',
+    '# { energyInfoByState(stateCode: "TX", isBusiness: false) { averagePrice stateName electricityGenerationPercentage { renewableGeneration nonRenewableGeneration } } }',
+    '# { utilityAccounts(street: "947 STREETLIGHT STLG 250HPS", city: "BROWNSVILLE", state: "TX", zipCode: "78521") { utilityCode accountStatus } }'
+  ].join('\n');
+
+  const envEl = document.getElementById('env');
+  const keyEl = document.getElementById('key');
+  const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+
+  function render(){
+    const fetcher = GraphiQL.createFetcher({
+      url: envEl.value,
+      headers: keyEl.value ? { 'x-api-key': keyEl.value } : {}
+    });
+    root.render(
+      React.createElement(GraphiQL, {
+        fetcher: fetcher,
+        defaultQuery: DEFAULT_QUERY,
+        defaultEditorToolsVisibility: true
+      })
+    );
+  }
+  envEl.addEventListener('change', render);
+  keyEl.addEventListener('change', render);
+  render();
+</script>
+</body>
+</html>
