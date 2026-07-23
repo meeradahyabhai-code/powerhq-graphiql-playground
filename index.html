@@ -45,7 +45,7 @@
   // Rate limiting (e.g. 10 calls / IP) is enforced server-side by PowerHQ, not here.
   // Points at YOUR local proxy (via cloudflared tunnel). The proxy holds the key + adds CORS.
   // NOTE: this trycloudflare URL changes each time the tunnel restarts — update on restart.
-  const ENDPOINT   = "";
+  const ENDPOINT   = "https://f60d5595da8d62.lhr.life";
   const TESTER_KEY = ""; // no key here — the proxy injects it server-side
 
   const DEFAULT_QUERY = [
